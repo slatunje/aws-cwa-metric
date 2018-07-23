@@ -7,8 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-	"github.com/aws/aws-sdk-go-v2/aws/external"
-	"github.com/spf13/viper"
 )
 
 // CloudWatch stores an aws configuration
@@ -17,12 +15,7 @@ type CloudWatch struct {
 }
 
 // NewCloudWatch creates and instance of service.CloudWatch
-func NewCloudWatch() CloudWatch {
-	cfg, err := external.LoadDefaultAWSConfig()
-	if err != nil {
-		panic("unable to load SDK config")
-	}
-	cfg.Region = viper.GetString("aws_default_region")
+func NewCloudWatch(cfg aws.Config) CloudWatch {
 	return CloudWatch{Config: cfg}
 }
 

@@ -7,14 +7,14 @@ import (
 	"os"
 	"log"
 
+	"github.com/slatunje/aws-cwa-metric/pkg/metric"
+	"github.com/slatunje/aws-cwa-metric/pkg/utils"
 	"github.com/spf13/cobra"
-	"github.com/slatunje/aws-cwa-metrics/pkg/utils"
 	"github.com/spf13/viper"
-	"github.com/slatunje/aws-cwa-metrics/pkg/metric"
 )
 
 const (
-	app     = "cwametrics"
+	app     = "cwametric"
 	version = "0.0.1"
 )
 
@@ -33,10 +33,10 @@ var (
 // rootCmd represents the base command when called without any sub commands
 var rootCmd = &cobra.Command{
 	Use:   app,
-	Short: fmt.Sprintf("=> %s sends aws metrics to cloud watch", app),
+	Short: fmt.Sprintf("=> %s sends aws metric to cloud watch", app),
 	Long: fmt.Sprintf(`
 Description:
-  %s sends aws metrics to cloud watch.
+  %s sends aws metric to cloud watch.
 `, app),
 	Run: func(cmd *cobra.Command, args []string) {
 		metric.Execute()

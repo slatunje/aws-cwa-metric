@@ -4,7 +4,7 @@ AWS CloudWatchAgent Metrics Monitor
 
 ##  Installation
 
-go get -u github.com/slatunje/aws-cwa-metrics
+go get -u github.com/slatunje/aws-cwa-metric
 
 ##  Deploy
 
@@ -19,11 +19,11 @@ aws s3 cp ${s3_source} ${s3_destination} --recursive
 On ec2 instance - build the binary
 
 ```bash
-wget https://s3.eu-west-1.amazonaws.com/${s3_destination}/1.0.0/linux/cwa-metrics
+wget https://s3.eu-west-1.amazonaws.com/${s3_destination}/1.0.0/linux/cwa-metric
 
-chmod +x cwa-metrics
+chmod +x cwametrics
 
-mv ./cwa-metrics /usr/bin/cwa-metrics
+mv ./cwametrics /usr/bin/cwametrics
 
 cwa-metrics \
 --mem \

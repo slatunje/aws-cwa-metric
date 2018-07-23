@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/slatunje/aws-cwa-metrics/cmd"
+	"github.com/slatunje/aws-cwa-metric/cmd"
 )
 
 func main() {

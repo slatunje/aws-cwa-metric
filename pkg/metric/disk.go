@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-	"github.com/slatunje/aws-cwa-metrics/pkg/service"
+	"github.com/slatunje/aws-cwa-metric/pkg/service"
 	"github.com/shirou/gopsutil/disk"
 )
 

@@ -4,17 +4,18 @@ package metric
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-	"github.com/slatunje/aws-cwa-metrics/pkg/service"
+	"github.com/slatunje/aws-cwa-metric/pkg/service"
 	"log"
-	"github.com/slatunje/aws-cwa-metrics/pkg/client"
 	"github.com/spf13/viper"
 	"sort"
 	"strings"
-	"github.com/slatunje/aws-cwa-metrics/pkg/utils"
+	"github.com/slatunje/aws-cwa-metric/pkg/utils"
 	"context"
 	"os"
 	"os/signal"
 	"time"
+	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
 const (
@@ -59,28 +60,26 @@ func NewDatum(
 	}
 }
 
-// Collect metrics about enabled metric
-func Collect(metrics []Gatherer, cw service.CloudWatch, namespace string) {
-	id, err := client.InstanceID()
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, m := range metrics {
-		m.Collect(id, cw, namespace)
-	}
-}
-
 // Execute starts the service
 func Execute() {
 
 	var cm = chosen()
-	var cw = service.NewCloudWatch()
 	var ns = viper.GetString(utils.CWANamespaceKey)
+
+	var cf = config()
+
+	var cw = service.NewCloudWatch(cf)
+	var md = service.NewEC2MetaData(cf)
+
+	var id, err = md.InstanceID()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// handle one time execution?
 
 	if viper.GetBool(utils.CWAOnceKey) {
-		Collect(cm, cw, ns)
+		collect(cm, id, cw, ns)
 		return
 	}
 
@@ -90,7 +89,7 @@ func Execute() {
 	ctx, cancel := OnSignal(ctx, os.Interrupt, os.Kill)
 	defer cancel()
 
-	forever(ctx, cm, cw, ns)
+	forever(ctx, id, cm, cw, ns)
 }
 
 // OnSignal will listen to signals and gracefully shutdown
@@ -130,14 +129,31 @@ func chosen() (cm []Gatherer) {
 	return
 }
 
+// config returns an aws.Config object
+func config() (cfg aws.Config) {
+	cfg, err := external.LoadDefaultAWSConfig()
+	if err != nil {
+		panic("unable to load SDK config")
+	}
+	cfg.Region = viper.GetString("aws_default_region")
+	return
+}
+
+// collect enabled metrics
+func collect(metrics []Gatherer, id string, cw service.CloudWatch, namespace string) {
+	for _, m := range metrics {
+		m.Collect(id, cw, namespace)
+	}
+}
+
 // forever will forever collect metrics unless interrupted
-func forever(ctx context.Context, cm []Gatherer, cw service.CloudWatch, ns string) {
+func forever(ctx context.Context, id string, cm []Gatherer, cw service.CloudWatch, ns string) {
 	var tt = time.NewTicker(time.Duration(viper.GetInt(utils.CWAIntervalKey)) * time.Minute)
 	loop:
 	for {
 		select {
 		case <-tt.C:
-			Collect(cm, cw, ns)
+			collect(cm, id, cw, ns)
 		case <-ctx.Done():
 			log.Printf("ok stopping forever task due to: %s...", ctx.Err())
 			break loop

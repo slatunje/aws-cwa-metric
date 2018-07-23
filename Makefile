@@ -9,7 +9,7 @@ build.macosx:
 	GOARCH=amd64 \
 	go build \
 	-ldflags="-s -w" \
-	-o bin/cwametrics \
+	-o bin/cwametric \
 	main.go
 
 build.linux:
