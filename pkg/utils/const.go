@@ -16,7 +16,7 @@ const (
 
 const (
 	CWARegion    = "eu-west-1"
-	CWANamespace = "CustomMetricsLocal"
+	CWANamespace = "CustomMetrics"
 	CWAInterval  = 5
 )
 

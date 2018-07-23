@@ -29,7 +29,7 @@ const (
 	KeySwap    = "swap"
 )
 
-var registered = map[string]Metric{
+var registered = map[string]Gatherer{
 	KeyDisk:    Disk{},
 	KeyDocker:  Docker{},
 	KeyMemory:  Memory{},
@@ -37,8 +37,8 @@ var registered = map[string]Metric{
 	KeySwap:    Swap{},
 }
 
-// Metric entity
-type Metric interface {
+// Gatherer entity
+type Gatherer interface {
 	Collect(string, service.CloudWatch, string)
 }
 
@@ -60,7 +60,7 @@ func NewDatum(
 }
 
 // Collect metrics about enabled metric
-func Collect(metrics []Metric, cw service.CloudWatch, namespace string) {
+func Collect(metrics []Gatherer, cw service.CloudWatch, namespace string) {
 	id, err := client.InstanceID()
 	if err != nil {
 		log.Fatal(err)
@@ -111,7 +111,7 @@ func OnSignal(ctx context.Context, s ...os.Signal) (context.Context, context.Can
 }
 
 // chosen returns a slice of chosen metrics
-func chosen() (cm []Metric) {
+func chosen() (cm []Gatherer) {
 
 	keys := viper.AllKeys()
 	sort.Strings(keys)
@@ -131,7 +131,7 @@ func chosen() (cm []Metric) {
 }
 
 // forever will forever collect metrics unless interrupted
-func forever(ctx context.Context, cm []Metric, cw service.CloudWatch, ns string) {
+func forever(ctx context.Context, cm []Gatherer, cw service.CloudWatch, ns string) {
 	var tt = time.NewTicker(time.Duration(viper.GetInt(utils.CWAIntervalKey)) * time.Minute)
 	loop:
 	for {

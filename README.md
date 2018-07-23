@@ -38,13 +38,19 @@ cwa-metrics \
 
 On ec2 instance - create the service
 
-```bash
-
-
-```
+[SystemD Example](doc/unit.md)
 
 ##  Sources
 
 -   https://github.com/shirou/gopsutil
--   http://www.blog.labouardy.com/publish-custom-metrics-aws-cloudwatch
+
+##  Similar Repos
+
+-   https://github.com/advantageous/metricsd
+-   https://github.com/advantageous/systemd-cloud-watch
+-   https://github.com/advantageous/journald-cloudwatch-logs  
+
+-   https://github.com/saymedia/journald-cloudwatch-logs
+
+
 
