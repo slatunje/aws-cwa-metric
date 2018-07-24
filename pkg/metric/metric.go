@@ -3,19 +3,20 @@
 package metric
 
 import (
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-	"github.com/slatunje/aws-cwa-metric/pkg/service"
-	"log"
-	"github.com/spf13/viper"
-	"sort"
-	"strings"
-	"github.com/slatunje/aws-cwa-metric/pkg/utils"
 	"context"
+	"log"
 	"os"
 	"os/signal"
+	"sort"
+	"strings"
 	"time"
-	"github.com/aws/aws-sdk-go-v2/aws/external"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/slatunje/aws-cwa-metric/pkg/service"
+	"github.com/slatunje/aws-cwa-metric/pkg/utils"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -135,7 +136,7 @@ func config() (cfg aws.Config) {
 	if err != nil {
 		panic("unable to load SDK config")
 	}
-	cfg.Region = viper.GetString("aws_default_region")
+	cfg.Region = viper.GetString(utils.CWARegionKey)
 	return
 }
 

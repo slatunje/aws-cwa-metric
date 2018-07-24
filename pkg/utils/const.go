@@ -21,7 +21,7 @@ const (
 )
 
 const (
-	CWARegionKey    = "aws_default_region"
+	CWARegionKey    = "aws_cwa_region"
 	CWANamespaceKey = "aws_cwa_namespace"
 	CWAIntervalKey  = "aws_cwa_interval"
 	CWAOnceKey      = "aws_cwa_once"
