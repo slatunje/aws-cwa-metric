@@ -64,10 +64,9 @@ func NewDatum(
 // Execute starts the service
 func Execute() {
 
+	var cf = config()
 	var cm = chosen()
 	var ns = viper.GetString(utils.CWANamespaceKey)
-
-	var cf = config()
 
 	var cw = service.NewCloudWatch(cf)
 	var md = service.NewEC2MetaData(cf)
@@ -110,6 +109,16 @@ func OnSignal(ctx context.Context, s ...os.Signal) (context.Context, context.Can
 	return ctx, cancel
 }
 
+// config returns an aws.Config object
+func config() (cfg aws.Config) {
+	cfg, err := external.LoadDefaultAWSConfig()
+	if err != nil {
+		panic("unable to load SDK config")
+	}
+	cfg.Region = viper.GetString(utils.CWARegionKey)
+	return
+}
+
 // chosen returns a slice of chosen metrics
 func chosen() (cm []Gatherer) {
 
@@ -127,16 +136,6 @@ func chosen() (cm []Gatherer) {
 		}
 	}
 
-	return
-}
-
-// config returns an aws.Config object
-func config() (cfg aws.Config) {
-	cfg, err := external.LoadDefaultAWSConfig()
-	if err != nil {
-		panic("unable to load SDK config")
-	}
-	cfg.Region = viper.GetString(utils.CWARegionKey)
 	return
 }
 
