@@ -1,0 +1,20 @@
+#cloud-config
+
+---
+coreos:
+  units:
+    - name: amazon-cwametric.service
+      command: start
+      content: |
+        [Unit]
+        After=amazon-clean.service
+        ConditionFileNotEmpty=/opt/bin/cwametric
+        Description=amazon-cwametric
+        [Service]
+        Type=simple
+        ExecStart=/opt/bin/cwametric --disk --memory --network --swap --namespace PKI --interval 5
+        KillMode=process
+        Restart=on-failure
+        RestartSec=15s
+        [Install]
+        WantedBy=network-online.target

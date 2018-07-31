@@ -149,14 +149,16 @@ func collect(metrics []Gatherer, id string, cw service.CloudWatch, namespace str
 // forever will forever collect metrics unless interrupted
 func forever(ctx context.Context, id string, cm []Gatherer, cw service.CloudWatch, ns string) {
 	var tt = time.NewTicker(time.Duration(viper.GetInt(utils.CWAIntervalKey)) * time.Minute)
+	{
 	loop:
-	for {
-		select {
-		case <-tt.C:
-			collect(cm, id, cw, ns)
-		case <-ctx.Done():
-			log.Printf("ok stopping forever task due to: %s...", ctx.Err())
-			break loop
+		for {
+			select {
+			case <-tt.C:
+				collect(cm, id, cw, ns)
+			case <-ctx.Done():
+				log.Printf("ok stopping forever task due to: %s...", ctx.Err())
+				break loop
+			}
 		}
 	}
 	log.Println("shutdwon completed.")
