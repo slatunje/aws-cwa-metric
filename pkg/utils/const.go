@@ -4,7 +4,7 @@ package utils
 
 // ExitXXX represents various exit code within the system
 const (
-	_                       = iota
+	_ = iota
 	ExitExecute
 	ExitRequireKeys
 	ExitCredentialsFailure

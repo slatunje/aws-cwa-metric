@@ -4,8 +4,8 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"log"
+	"os"
 
 	"github.com/slatunje/aws-cwa-metric/pkg/metric"
 	"github.com/slatunje/aws-cwa-metric/pkg/utils"
@@ -25,6 +25,7 @@ var (
 	once      bool
 	memory    bool
 	swap      bool
+	cpu       bool
 	disk      bool
 	network   bool
 	docker    bool
@@ -59,6 +60,8 @@ func init() {
 		BoolVarP(&once, "once", "o", false, "execute once and stop. (i.e. never repeat.")
 	// === metrics === //
 	rootCmd.PersistentFlags().
+		BoolVarP(&disk, metric.KeyCPU, "c", false, "collect cpu metrics.")
+	rootCmd.PersistentFlags().
 		BoolVarP(&disk, metric.KeyDisk, "d", false, "collect disk metrics.")
 	rootCmd.PersistentFlags().
 		BoolVar(&docker, metric.KeyDocker, false, "collect docker container metrics.")
@@ -82,6 +85,7 @@ func setDefaults() {
 	viper.SetDefault(utils.CWANamespaceKey, namespace)
 	viper.SetDefault(utils.CWAIntervalKey, interval)
 	viper.SetDefault(utils.CWAOnceKey, once)
+	viper.SetDefault("aws_metrics_cpu", cpu)
 	viper.SetDefault("aws_metrics_memory", memory)
 	viper.SetDefault("aws_metrics_swap", swap)
 	viper.SetDefault("aws_metrics_disk", disk)

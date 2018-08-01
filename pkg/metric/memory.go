@@ -5,26 +5,48 @@ package metric
 import (
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-	"github.com/slatunje/aws-cwa-metric/pkg/service"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/slatunje/aws-cwa-metric/pkg/service"
+)
+
+// https://github.com/shirou/gopsutil/blob/master/mem/mem.go#L15
+// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/metrics-collected-by-CloudWatch-agent.html
+const (
+	MemoryTotal       = "mem_total"
+	MemoryAvailable   = "mem_available"
+	MemoryUsed        = "mem_used"
+	MemoryUsedPercent = "mem_used_percent"
+	MemoryFree        = "mem_free"
+	MemoryCached      = "mem_cached"
 )
 
 // Memory metric entity
 type Memory struct{}
 
 // Collect Memory utilization
-func (c Memory) Collect(id string, cw service.CloudWatch, namespace string) {
+func (c Memory) Collect(doc ec2metadata.EC2InstanceIdentityDocument, cw service.CloudWatch, namespace string) {
 	m, err := mem.VirtualMemory()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	key := "InstanceId"
-	dimensions := []cloudwatch.Dimension{
+	key1 := "InstanceId"
+	key2 := "ImageId"
+	key3 := "InstanceType"
+	dime := []cloudwatch.Dimension{
 		{
-			Name:  &key,
-			Value: &id,
+			Name:  &key1,
+			Value: &doc.InstanceID,
+		},
+		{
+			Name:  &key2,
+			Value: &doc.ImageID,
+		},
+		{
+			Name:  &key3,
+			Value: &doc.InstanceType,
 		},
 	}
 
@@ -32,9 +54,12 @@ func (c Memory) Collect(id string, cw service.CloudWatch, namespace string) {
 		cw.Publish(NewDatum(name, value, unit, dime), namespace)
 	}
 
-	publish("MemoryUtilization", m.UsedPercent, cloudwatch.StandardUnitPercent, dimensions)
-	publish("MemoryUsed", float64(m.Used), cloudwatch.StandardUnitBytes, dimensions)
-	publish("MemoryAvailable", float64(m.Available), cloudwatch.StandardUnitBytes, dimensions)
+	publish(MemoryTotal, float64(m.Total), cloudwatch.StandardUnitBytes, dime)
+	publish(MemoryAvailable, float64(m.Available), cloudwatch.StandardUnitBytes, dime)
+	publish(MemoryUsed, float64(m.Used), cloudwatch.StandardUnitBytes, dime)
+	publish(MemoryUsedPercent, m.UsedPercent, cloudwatch.StandardUnitPercent, dime)
+	publish(MemoryFree, float64(m.Free), cloudwatch.StandardUnitBytes, dime)
+	publish(MemoryCached, float64(m.Cached), cloudwatch.StandardUnitBytes, dime)
 
 	log.Printf("memory - utilization:%v%% used:%v available:%v\n", m.UsedPercent, m.Used, m.Available)
 }

@@ -18,7 +18,17 @@ func NewEC2MetaData(cfg aws.Config) EC2MetaData {
 	return EC2MetaData{Config: cfg, Meta: ec2metadata.New(cfg)}
 }
 
-// InstanceID return the instance id from meta data
-func (e *EC2MetaData) InstanceID() (string, error) {
+// ID return the instance id from meta data
+func (e *EC2MetaData) ID() (string, error) {
 	return e.Meta.GetMetadata("instance-id")
+}
+
+// UserData returns user data used in to boot current instance
+func (e *EC2MetaData) UserData() (string, error) {
+	return e.Meta.GetUserData()
+}
+
+// IDDoc returns an `ec2metadata.EC2InstanceIdentityDocument` object
+func (e *EC2MetaData) IDDoc() (ec2metadata.EC2InstanceIdentityDocument, error) {
+	return e.Meta.GetInstanceIdentityDocument()
 }

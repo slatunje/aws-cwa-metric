@@ -31,6 +31,3 @@ func (c CloudWatch) Publish(data []cloudwatch.MetricDatum, namespace string) {
 		log.Fatal(err)
 	}
 }
-
-
-

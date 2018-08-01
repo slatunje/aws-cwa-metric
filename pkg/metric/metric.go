@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/slatunje/aws-cwa-metric/pkg/service"
@@ -24,6 +25,7 @@ const (
 )
 
 const (
+	KeyCPU     = "cpu"
 	KeyDisk    = "disk"
 	KeyDocker  = "docker"
 	KeyMemory  = "memory"
@@ -32,6 +34,7 @@ const (
 )
 
 var registered = map[string]Gatherer{
+	KeyCPU:     CPU{},
 	KeyDisk:    Disk{},
 	KeyDocker:  Docker{},
 	KeyMemory:  Memory{},
@@ -41,7 +44,7 @@ var registered = map[string]Gatherer{
 
 // Gatherer entity
 type Gatherer interface {
-	Collect(string, service.CloudWatch, string)
+	Collect(ec2metadata.EC2InstanceIdentityDocument, service.CloudWatch, string)
 }
 
 // NewDatum returns a slice of `[]cloudwatch.MetricDatum` data object
@@ -71,7 +74,7 @@ func Execute() {
 	var cw = service.NewCloudWatch(cf)
 	var md = service.NewEC2MetaData(cf)
 
-	var id, err = md.InstanceID()
+	var id, err = md.IDDoc()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -140,21 +143,21 @@ func chosen() (cm []Gatherer) {
 }
 
 // collect enabled metrics
-func collect(metrics []Gatherer, id string, cw service.CloudWatch, namespace string) {
+func collect(metrics []Gatherer, dc ec2metadata.EC2InstanceIdentityDocument, cw service.CloudWatch, namespace string) {
 	for _, m := range metrics {
-		m.Collect(id, cw, namespace)
+		m.Collect(dc, cw, namespace)
 	}
 }
 
 // forever will forever collect metrics unless interrupted
-func forever(ctx context.Context, id string, cm []Gatherer, cw service.CloudWatch, ns string) {
+func forever(ctx context.Context, dc ec2metadata.EC2InstanceIdentityDocument, cm []Gatherer, cw service.CloudWatch, ns string) {
 	var tt = time.NewTicker(time.Duration(viper.GetInt(utils.CWAIntervalKey)) * time.Minute)
 	{
 	loop:
 		for {
 			select {
 			case <-tt.C:
-				collect(cm, id, cw, ns)
+				collect(cm, dc, cw, ns)
 			case <-ctx.Done():
 				log.Printf("ok stopping forever task due to: %s...", ctx.Err())
 				break loop

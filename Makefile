@@ -17,7 +17,7 @@ build.linux:
 	GOARCH=amd64 \
 	go build \
 	-ldflags="-s -w" \
-	-o bin/cwametric.l.txt \
+	-o bin/cwametric.l \
 	main.go
 
 -include .private/mks/*.mk

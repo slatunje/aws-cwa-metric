@@ -9,9 +9,17 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-	"github.com/slatunje/aws-cwa-metric/pkg/service"
 	"github.com/shirou/gopsutil/docker"
+	"github.com/slatunje/aws-cwa-metric/pkg/service"
+)
+
+// https://github.com/shirou/gopsutil/blob/master/docker/docker.go
+const (
+	DockerContainerMemory    = "docker_container_mem"
+	DockerContainerCPUUser   = "docker_container_cpu_user"
+	DockerContainerCPUSystem = "docker_container_cpu_system"
 )
 
 // Docker metric entity
@@ -31,7 +39,7 @@ func cGroupMountPath() (string, error) {
 }
 
 // Collect CPU & Memory usage per Docker Container
-func (c Docker) Collect(id string, cw service.CloudWatch, namespace string) {
+func (c Docker) Collect(doc ec2metadata.EC2InstanceIdentityDocument, cw service.CloudWatch, namespace string) {
 	containers, err := docker.GetDockerStat()
 	if err != nil {
 		log.Fatal(err)
@@ -47,54 +55,56 @@ func (c Docker) Collect(id string, cw service.CloudWatch, namespace string) {
 	}
 
 	for _, container := range containers {
-		d := make([]cloudwatch.Dimension, 0)
-
-		// declare dimension keys
 
 		key1 := "InstanceId"
-		d = append(d, cloudwatch.Dimension{
-			Name:  &key1,
-			Value: &id,
-		})
-		key2 := "ContainerId"
-		d = append(d, cloudwatch.Dimension{
-			Name:  &key2,
-			Value: &container.ContainerID,
-		})
-		key3 := "ContainerName"
-		d = append(d, cloudwatch.Dimension{
-			Name:  &key3,
-			Value: &container.Name,
-		})
-		key4 := "DockerImage"
-		d = append(d, cloudwatch.Dimension{
-			Name:  &key4,
-			Value: &container.Image,
-		})
+		key2 := "ImageId"
+		key3 := "InstanceType"
+		key4 := "ContainerId"
+		key5 := "ContainerName"
+		key6 := "DockerImage"
 
-		// mem
+		dime := []cloudwatch.Dimension{
+			{
+				Name:  &key1,
+				Value: &doc.InstanceID,
+			},
+			{
+				Name:  &key2,
+				Value: &doc.ImageID,
+			},
+			{
+				Name:  &key3,
+				Value: &doc.InstanceType,
+			},
+			{
+				Name:  &key4,
+				Value: &container.ContainerID,
+			},
+			{
+				Name:  &key5,
+				Value: &container.Name,
+			},
+			{
+				Name:  &key6,
+				Value: &container.Image,
+			},
+		}
 
 		mem, err := docker.CgroupMem(container.ContainerID, fmt.Sprintf("%s/mem/docker", base))
 		if err != nil {
 			log.Fatal(err)
 		}
-		publish("ContainerMemory", float64(mem.MemUsageInBytes), cloudwatch.StandardUnitBytes, d)
-
-		// cpu
-
 		cpu, err := docker.CgroupCPU(container.ContainerID, fmt.Sprintf("%s/cpuacct/docker", base))
 		if err != nil {
 			log.Fatal(err)
 		}
-		publish("ContainerCPUUser", float64(cpu.User), cloudwatch.StandardUnitSeconds, d)
 
-		// cpu system data
+		publish(DockerContainerMemory, float64(mem.MemUsageInBytes), cloudwatch.StandardUnitBytes, dime)
+		publish(DockerContainerCPUUser, float64(cpu.User), cloudwatch.StandardUnitSeconds, dime)
+		publish(DockerContainerCPUSystem, float64(cpu.System), cloudwatch.StandardUnitSeconds, dime)
 
-		publish("ContainerCPUSystem", float64(cpu.System), cloudwatch.StandardUnitSeconds, d)
-
-		// log message
-
-		msg := "docker - container:%s memory:%v user:%v system:%v\n"
-		log.Printf(msg, container.Name, mem.MemMaxUsageInBytes, cpu.User, cpu.System)
+		log.Printf("docker - container:%s memory:%v user:%v system:%v\n",
+			container.Name, mem.MemMaxUsageInBytes, cpu.User, cpu.System,
+		)
 	}
 }
