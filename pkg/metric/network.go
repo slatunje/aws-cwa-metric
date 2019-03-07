@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/iancoleman/strcase"
 	"github.com/shirou/gopsutil/net"
 	"github.com/slatunje/aws-cwa-metric/pkg/service"
 )
@@ -35,7 +36,7 @@ func (c Network) Collect(doc ec2metadata.EC2InstanceIdentityDocument, cw service
 	}
 
 	var publish = func(name string, value float64, unit cloudwatch.StandardUnit, dime []cloudwatch.Dimension) {
-		cw.Publish(NewDatum(name, value, unit, dime), namespace)
+		cw.Publish(NewDatum(strcase.ToCamel(name), value, unit, dime), namespace)
 	}
 
 	for _, ioc := range metrics {
