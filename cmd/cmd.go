@@ -46,7 +46,7 @@ Description:
 
 // init is called in alphabetic order within this package
 func init() {
-	os.Setenv("TZ", "")
+	setEmptyTimezone()
 	cobra.OnInitialize(initConfig)
 	rootCmd.Version = version
 	// === settings === //
@@ -71,6 +71,13 @@ func init() {
 		BoolVarP(&network, metric.KeyNetwork, "n", false, "collect network metrics.")
 	rootCmd.PersistentFlags().
 		BoolVarP(&swap, metric.KeySwap, "s", false, "collect swap metrics.")
+}
+
+// setEmptyTimezone
+func setEmptyTimezone() {
+	if err := os.Setenv("TZ", ""); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.
